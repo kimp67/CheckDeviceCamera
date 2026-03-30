@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
 import '../models/fps_range_model.dart';
+import '../theme/app_theme.dart';
 
+/// 프리셋별 FPS 범위를 표시하는 카드 위젯
 class FpsRangeCard extends StatelessWidget {
   final FpsRangeInfo fpsRange;
   final bool showDetails;
@@ -11,183 +14,125 @@ class FpsRangeCard extends StatelessWidget {
     this.showDetails = false,
   });
 
-  Color get _cardColor {
-    if (!fpsRange.isSupported) return const Color(0xFF1A1A1A);
-    final fps = fpsRange.maxFps;
-    if (fps >= 240) return const Color(0xFF880E4F);
-    if (fps >= 120) return const Color(0xFFBF360C);
-    if (fps >= 60) return const Color(0xFF1B5E20);
-    if (fps >= 30) return const Color(0xFF0D47A1);
-    return const Color(0xFF212121);
-  }
+  Color get _accentColor => fpsRange.isSupported
+      ? AppTheme.fpsColor(fpsRange.maxFps)
+      : Colors.grey;
 
-  Color get _accentColor {
-    if (!fpsRange.isSupported) return Colors.grey;
-    final fps = fpsRange.maxFps;
-    if (fps >= 240) return const Color(0xFFE91E63);
-    if (fps >= 120) return const Color(0xFFFF5722);
-    if (fps >= 60) return const Color(0xFF4CAF50);
-    if (fps >= 30) return const Color(0xFF2196F3);
-    return const Color(0xFF9E9E9E);
-  }
+  Color get _bgColor => fpsRange.isSupported
+      ? AppTheme.fpsBgColor(fpsRange.maxFps).withValues(alpha: 0.25)
+      : const Color(0xFF1A1A1A);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: _cardColor.withValues(alpha: 0.25),
+        color: _bgColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _accentColor.withValues(alpha: fpsRange.isSupported ? 0.4 : 0.2),
+          color: _accentColor.withValues(
+              alpha: fpsRange.isSupported ? 0.4 : 0.2),
           width: 1.5,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              // 프리셋 배지
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _accentColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _accentColor.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text(
-                  fpsRange.resolutionPreset.name,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: _accentColor,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  fpsRange.resolutionPreset.typicalResolution,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white54,
-                  ),
-                ),
-              ),
-              // 카테고리 태그
-              if (fpsRange.isSupported)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    fpsRange.frameRateCategoryKo,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: _accentColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          _buildTopRow(),
+          SizedBox(height: 1.5.h),
           if (fpsRange.isSupported) ...[
-            _buildFpsDisplay(theme),
+            _buildFpsDisplay(),
             if (showDetails) ...[
-              const SizedBox(height: 12),
-              _buildFpsProgressBar(theme),
-              const SizedBox(height: 8),
-              _buildDetailRow(
-                  theme, '해상도 레이블', fpsRange.label),
+              SizedBox(height: 1.5.h),
+              _buildProgressBar(),
+              SizedBox(height: 1.h),
+              _buildDetailRow('해상도 레이블', fpsRange.label),
             ],
           ] else
-            _buildUnsupportedDisplay(theme),
+            _buildUnsupportedRow(),
         ],
       ),
     );
   }
 
-  Widget _buildFpsDisplay(ThemeData theme) {
+  Widget _buildTopRow() {
     return Row(
       children: [
-        Expanded(
-          child: _buildFpsValue(
-              theme, 'MIN', fpsRange.minFps, Colors.white60),
+        // 프리셋 배지
+        Container(
+          padding:
+              EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.5.h),
+          decoration: BoxDecoration(
+            color: _accentColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _accentColor.withValues(alpha: 0.5)),
+          ),
+          child: Text(
+            fpsRange.resolutionPreset.name,
+            style: TextStyle(
+              color: _accentColor,
+              fontSize: 9.sp,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
         ),
+        SizedBox(width: 2.5.w),
+        Expanded(
+          child: Text(
+            fpsRange.resolutionPreset.typicalResolution,
+            style: TextStyle(
+                color: AppTheme.textHint, fontSize: 8.5.sp),
+          ),
+        ),
+        // 카테고리 태그
+        if (fpsRange.isSupported)
+          Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: 2.w, vertical: 0.4.h),
+            decoration: BoxDecoration(
+              color: _accentColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              fpsRange.frameRateCategoryKo,
+              style: TextStyle(
+                color: _accentColor,
+                fontSize: 7.5.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFpsDisplay() {
+    return Row(
+      children: [
+        Expanded(child: _FpsValue(label: 'MIN', fps: fpsRange.minFps, color: Colors.white60)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 3.w),
           child: Column(
             children: [
               Icon(Icons.arrow_forward_rounded,
-                  color: _accentColor.withValues(alpha: 0.6), size: 18),
+                  color: _accentColor.withValues(alpha: 0.6), size: 4.5.w),
               Text(
                 'FPS',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white30,
-                  fontSize: 10,
-                ),
+                style: TextStyle(
+                    color: AppTheme.textDisabled, fontSize: 7.5.sp),
               ),
             ],
           ),
         ),
-        Expanded(
-          child: _buildFpsValue(
-              theme, 'MAX', fpsRange.maxFps, _accentColor),
-        ),
+        Expanded(child: _FpsValue(label: 'MAX', fps: fpsRange.maxFps, color: _accentColor)),
       ],
     );
   }
 
-  Widget _buildFpsValue(
-      ThemeData theme, String label, double fps, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.white38,
-            letterSpacing: 1,
-            fontSize: 10,
-          ),
-        ),
-        const SizedBox(height: 2),
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: fps.toStringAsFixed(fps == fps.roundToDouble() ? 0 : 1),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              TextSpan(
-                text: ' fps',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: color.withValues(alpha: 0.7),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFpsProgressBar(ThemeData theme) {
-    const maxPossibleFps = 240.0;
-    final progress = (fpsRange.maxFps / maxPossibleFps).clamp(0.0, 1.0);
+  Widget _buildProgressBar() {
+    const maxPossible = 240.0;
+    final progress = (fpsRange.maxFps / maxPossible).clamp(0.0, 1.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,42 +142,45 @@ class FpsRangeCard extends StatelessWidget {
           children: [
             Text(
               'FPS 수준',
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white38),
+              style: TextStyle(
+                  color: AppTheme.textDisabled, fontSize: 8.sp),
             ),
             Text(
               '${(progress * 100).toStringAsFixed(0)}% (최대 240 기준)',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: _accentColor.withValues(alpha: 0.7),
-              ),
+              style: TextStyle(
+                  color: _accentColor.withValues(alpha: 0.7),
+                  fontSize: 8.sp),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 0.8.h),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.white10,
             valueColor: AlwaysStoppedAnimation<Color>(_accentColor),
-            minHeight: 6,
+            minHeight: 0.8.h,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDetailRow(ThemeData theme, String label, String value) {
+  Widget _buildDetailRow(String label, String value) {
     return Row(
       children: [
         Text(
           '$label: ',
-          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white38),
+          style: TextStyle(
+              color: AppTheme.textDisabled, fontSize: 8.sp),
         ),
         Expanded(
           child: Text(
             value,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white60,
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 8.sp,
               fontFamily: 'monospace',
             ),
           ),
@@ -241,19 +189,68 @@ class FpsRangeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildUnsupportedDisplay(ThemeData theme) {
+  Widget _buildUnsupportedRow() {
     return Row(
       children: [
-        const Icon(Icons.block_rounded, color: Colors.red, size: 16),
-        const SizedBox(width: 8),
+        Icon(Icons.block_rounded, color: Colors.red, size: 4.w),
+        SizedBox(width: 2.w),
         Expanded(
           child: Text(
             fpsRange.errorMessage ?? '이 기기에서 지원되지 않는 해상도',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.red.shade300,
-            ),
+            style: TextStyle(
+                color: Colors.red.shade300, fontSize: 8.5.sp),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── FPS 수치 표시 서브 위젯 ─────────────────────────────────────
+class _FpsValue extends StatelessWidget {
+  final String label;
+  final double fps;
+  final Color color;
+
+  const _FpsValue(
+      {required this.label, required this.fps, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: AppTheme.textDisabled,
+            fontSize: 8.sp,
+            letterSpacing: 1,
+          ),
+        ),
+        SizedBox(height: 0.3.h),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: fps.toStringAsFixed(
+                    fps == fps.roundToDouble() ? 0 : 1),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              TextSpan(
+                text: ' fps',
+                style: TextStyle(
+                  color: color.withValues(alpha: 0.7),
+                  fontSize: 8.5.sp,
+                ),
+              ),
+            ],
           ),
         ),
       ],

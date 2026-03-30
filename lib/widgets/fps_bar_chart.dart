@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
 import '../models/fps_range_model.dart';
+import '../theme/app_theme.dart';
 
-/// FPS 범위를 막대 차트로 시각화하는 위젯
+/// FPS 막대 차트 위젯 - Sizer 반응형 사이즈 적용
 class FpsBarChart extends StatelessWidget {
   final List<FpsRangeInfo> fpsRanges;
   final bool showTitle;
@@ -14,21 +16,16 @@ class FpsBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final supportedRanges = fpsRanges.where((r) => r.isSupported).toList();
+    final supported = fpsRanges.where((r) => r.isSupported).toList();
+    if (supported.isEmpty) return const SizedBox.shrink();
 
-    if (supportedRanges.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final maxFps = supportedRanges
-        .map((r) => r.maxFps)
-        .reduce((a, b) => a > b ? a : b);
+    final maxFps =
+        supported.map((r) => r.maxFps).reduce((a, b) => a > b ? a : b);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: AppTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -38,73 +35,43 @@ class FpsBarChart extends StatelessWidget {
           if (showTitle) ...[
             Row(
               children: [
-                const Icon(Icons.bar_chart_rounded,
-                    color: Color(0xFF42A5F5), size: 20),
-                const SizedBox(width: 8),
+                Icon(Icons.bar_chart_rounded,
+                    color: AppTheme.primaryLight, size: 5.w),
+                SizedBox(width: 2.w),
                 Text(
                   'FPS 비교 차트',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 2.h),
           ],
-          // 차트 영역
           SizedBox(
-            height: 160,
+            height: 20.h,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Y축 레이블
                 SizedBox(
-                  width: 36,
+                  width: 9.w,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        '${maxFps.toStringAsFixed(0)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '${(maxFps * 0.75).toStringAsFixed(0)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '${(maxFps * 0.5).toStringAsFixed(0)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '${(maxFps * 0.25).toStringAsFixed(0)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '0',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white38,
-                          fontSize: 10,
-                        ),
-                      ),
+                      _yLabel(maxFps.toStringAsFixed(0)),
+                      _yLabel((maxFps * 0.75).toStringAsFixed(0)),
+                      _yLabel((maxFps * 0.5).toStringAsFixed(0)),
+                      _yLabel((maxFps * 0.25).toStringAsFixed(0)),
+                      _yLabel('0'),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                // 차트 바
+                SizedBox(width: 2.w),
+                // 차트 영역
                 Expanded(
                   child: Stack(
                     children: [
@@ -113,12 +80,13 @@ class FpsBarChart extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: List.generate(
                           5,
-                          (i) => Expanded(
+                          (_) => Expanded(
                             child: Container(
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.05),
+                                    color: Colors.white
+                                        .withValues(alpha: 0.05),
                                     width: 1,
                                   ),
                                 ),
@@ -127,14 +95,15 @@ class FpsBarChart extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // 바 차트
+                      // 바
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: fpsRanges.map((range) {
-                          return Expanded(
-                            child: _buildBar(theme, range, maxFps),
-                          );
-                        }).toList(),
+                        children: fpsRanges
+                            .map((r) => Expanded(
+                                  child: _Bar(
+                                      range: r, maxFps: maxFps),
+                                ))
+                            .toList(),
                       ),
                     ],
                   ),
@@ -142,43 +111,89 @@ class FpsBarChart extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 1.h),
           // X축 레이블
           Row(
             children: [
-              const SizedBox(width: 44),
-              ...fpsRanges.map((range) {
-                return Expanded(
+              SizedBox(width: 11.w),
+              ...fpsRanges.map(
+                (r) => Expanded(
                   child: Text(
-                    range.resolutionPreset.name,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white38,
-                      fontSize: 9,
-                    ),
+                    r.resolutionPreset.name,
+                    style: TextStyle(
+                        color: AppTheme.textDisabled, fontSize: 7.sp),
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                   ),
-                );
-              }),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          // 범례
-          _buildLegend(theme),
+          SizedBox(height: 1.5.h),
+          _buildLegend(),
         ],
       ),
     );
   }
 
-  Widget _buildBar(ThemeData theme, FpsRangeInfo range, double maxFps) {
+  Widget _yLabel(String text) => Text(
+        text,
+        style: TextStyle(color: AppTheme.textDisabled, fontSize: 7.sp),
+        textAlign: TextAlign.right,
+      );
+
+  Widget _buildLegend() {
+    final items = [
+      ('≥240 초고속', AppTheme.fpsUltra),
+      ('≥120 슬로우', AppTheme.fpsSlow),
+      ('≥60 HFR', AppTheme.fpsHFR),
+      ('≥30 표준', AppTheme.fpsStandard),
+    ];
+    return Wrap(
+      spacing: 3.w,
+      runSpacing: 0.5.h,
+      children: items.map((l) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 2.w,
+              height: 2.w,
+              decoration:
+                  BoxDecoration(color: l.$2, shape: BoxShape.circle),
+            ),
+            SizedBox(width: 1.w),
+            Text(
+              l.$1,
+              style: TextStyle(
+                  color: AppTheme.textDisabled, fontSize: 7.5.sp),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── 막대 바 위젯 ─────────────────────────────────────────────
+class _Bar extends StatelessWidget {
+  final FpsRangeInfo range;
+  final double maxFps;
+
+  const _Bar({required this.range, required this.maxFps});
+
+  @override
+  Widget build(BuildContext context) {
+    final chartH = 20.h - 2.h; // 격자 높이
+
     if (!range.isSupported || maxFps == 0) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.symmetric(horizontal: 1.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-              height: 20,
+              height: 2.h,
               decoration: BoxDecoration(
                 color: Colors.white10,
                 borderRadius:
@@ -190,41 +205,36 @@ class FpsBarChart extends StatelessWidget {
       );
     }
 
-    final barHeight = (range.maxFps / maxFps) * 140;
-    final color = _fpsColor(range.maxFps);
+    final barH = (range.maxFps / maxFps) * chartH;
+    final color = AppTheme.fpsColor(range.maxFps);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
+      padding: EdgeInsets.symmetric(horizontal: 1.w),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // FPS 값 레이블 (바 위)
-          if (barHeight > 20)
+          // FPS 수치
+          if (barH > 2.5.h)
             Padding(
-              padding: const EdgeInsets.only(bottom: 2),
+              padding: EdgeInsets.only(bottom: 0.3.h),
               child: Text(
                 range.maxFps.toStringAsFixed(0),
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   color: color,
+                  fontSize: 7.sp,
                   fontWeight: FontWeight.bold,
-                  fontSize: 9,
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
           // 막대
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutCubic,
-            height: barHeight,
+          Container(
+            height: barH.clamp(1.0, chartH),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  color,
-                  color.withValues(alpha: 0.5),
-                ],
+                colors: [color, color.withValues(alpha: 0.5)],
               ),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(4)),
@@ -240,50 +250,5 @@ class FpsBarChart extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildLegend(ThemeData theme) {
-    final legends = [
-      ('≥240 초고속', const Color(0xFFE91E63)),
-      ('≥120 슬로우Mo', const Color(0xFFFF5722)),
-      ('≥60 HFR', const Color(0xFF4CAF50)),
-      ('≥30 표준', const Color(0xFF2196F3)),
-    ];
-
-    return Wrap(
-      spacing: 12,
-      runSpacing: 4,
-      children: legends.map((l) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: l.$2,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l.$1,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white38,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Color _fpsColor(double fps) {
-    if (fps >= 240) return const Color(0xFFE91E63);
-    if (fps >= 120) return const Color(0xFFFF5722);
-    if (fps >= 60) return const Color(0xFF4CAF50);
-    if (fps >= 30) return const Color(0xFF2196F3);
-    return const Color(0xFF9E9E9E);
   }
 }

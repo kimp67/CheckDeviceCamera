@@ -1,129 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:camera/camera.dart';
-import '../models/fps_range_model.dart';
-import '../utils/camera_fps_analyzer.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:get/get.dart';
+import '../controllers/camera_controllers.dart';
+import '../theme/app_theme.dart';
 import '../widgets/fps_range_card.dart';
 import '../widgets/fps_bar_chart.dart';
 
-class ResultDetailScreen extends StatelessWidget {
-  final CameraDescription camera;
-  final List<FpsRangeInfo> fpsRanges;
+/// 상세 결과 화면 - GetView<InspectorController>
+class ResultDetailScreen extends GetView<InspectorController> {
+  final String cameraTag;
 
-  const ResultDetailScreen({
-    super.key,
-    required this.camera,
-    required this.fpsRanges,
-  });
+  const ResultDetailScreen({super.key, required this.cameraTag});
+
+  @override
+  String? get tag => cameraTag;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final directionLabel =
-        CameraFpsAnalyzer.lensDirectionToKorean(camera.lensDirection);
-    final supportedRanges = fpsRanges.where((r) => r.isSupported).toList();
-    final maxFps = supportedRanges.isEmpty
-        ? 0.0
-        : supportedRanges.map((r) => r.maxFps).reduce((a, b) => a > b ? a : b);
-
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
-        title: Text('$directionLabel 상세 결과'),
+        title: Text(
+          '${controller.directionLabel} 상세 결과',
+          style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.copy_rounded),
+            icon: Icon(Icons.copy_rounded, size: 5.5.w),
             tooltip: '결과 복사',
-            onPressed: () => _copyResults(context),
+            onPressed: _copyResults,
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // 헤더 카드
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildHeaderCard(theme, directionLabel, maxFps),
-            ),
-          ),
-
-          // 차트
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: FpsBarChart(fpsRanges: fpsRanges, showTitle: true),
-            ),
-          ),
-
-          // FPS 카테고리 분포
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildCategoryDistribution(theme, supportedRanges),
-            ),
-          ),
-
-          // 프리셋별 상세 카드
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Text(
-                '해상도 프리셋별 상세 정보',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: Colors.white54,
-                  letterSpacing: 0.5,
+      body: Obx(() => CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(4.w),
+                  child: _buildHeaderCard(),
                 ),
               ),
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: FpsRangeCard(
-                    fpsRange: fpsRanges[index],
-                    showDetails: true,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: FpsBarChart(
+                    fpsRanges: controller.fpsRanges,
+                    showTitle: true,
                   ),
-                );
-              },
-              childCount: fpsRanges.length,
-            ),
-          ),
-
-          // 기술 정보
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildTechnicalInfo(theme),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
-        ],
-      ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(4.w),
+                  child: _buildCategoryDistribution(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(4.w, 1.h, 4.w, 1.h),
+                  child: Text(
+                    '해상도 프리셋별 상세 정보',
+                    style: TextStyle(
+                      color: AppTheme.textHint,
+                      fontSize: 9.5.sp,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) => Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 4.w, vertical: 0.6.h),
+                    child: FpsRangeCard(
+                      fpsRange: controller.fpsRanges[i],
+                      showDetails: true,
+                    ),
+                  ),
+                  childCount: controller.fpsRanges.length,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(4.w),
+                  child: _buildTechnicalInfo(),
+                ),
+              ),
+              SliverToBoxAdapter(child: SizedBox(height: 5.h)),
+            ],
+          )),
     );
   }
 
-  Widget _buildHeaderCard(
-      ThemeData theme, String directionLabel, double maxFps) {
+  // ── 헤더 카드 ──────────────────────────────────────────
+  Widget _buildHeaderCard() {
+    final maxFps = controller.maxFps;
+    final camera = controller.camera;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(6.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1565C0).withValues(alpha: 0.5),
-            const Color(0xFF0D47A1).withValues(alpha: 0.3),
+            AppTheme.primary.withValues(alpha: 0.5),
+            AppTheme.primaryDark.withValues(alpha: 0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF42A5F5).withValues(alpha: 0.4),
-        ),
+            color: AppTheme.primaryLight.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,52 +120,58 @@ class ResultDetailScreen extends StatelessWidget {
           Row(
             children: [
               Icon(
-                camera.lensDirection == CameraLensDirection.back
+                camera.lensDirection.name == 'back'
                     ? Icons.camera_rear_rounded
-                    : camera.lensDirection == CameraLensDirection.front
+                    : camera.lensDirection.name == 'front'
                         ? Icons.camera_front_rounded
                         : Icons.usb_rounded,
-                color: const Color(0xFF42A5F5),
-                size: 28,
+                color: AppTheme.primaryLight,
+                size: 7.w,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 3.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      directionLabel,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
+                      controller.directionLabel,
+                      style: TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '${camera.name}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white38,
-                      ),
+                      camera.name,
+                      style: TextStyle(
+                          color: AppTheme.textDisabled, fontSize: 8.5.sp),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 2.h),
           const Divider(color: Colors.white10),
-          const SizedBox(height: 16),
+          SizedBox(height: 2.h),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildMetric(theme, '최대 FPS',
-                  '${maxFps.toStringAsFixed(1)} fps', const Color(0xFF42A5F5)),
-              _buildMetric(theme, '지원 프리셋',
-                  '${fpsRanges.where((r) => r.isSupported).length}종', const Color(0xFF66BB6A)),
-              _buildMetric(
-                  theme,
-                  '분석 항목',
-                  '${fpsRanges.length}개',
-                  const Color(0xFFFFB74D)),
+              _MetricItem(
+                label: '최대 FPS',
+                value: '${maxFps.toStringAsFixed(1)} fps',
+                color: AppTheme.primaryLight,
+              ),
+              _MetricItem(
+                label: '지원 프리셋',
+                value: '${controller.supportedRanges.length}종',
+                color: const Color(0xFF66BB6A),
+              ),
+              _MetricItem(
+                label: '분석 항목',
+                value: '${controller.fpsRanges.length}개',
+                color: const Color(0xFFFFB74D),
+              ),
             ],
           ),
         ],
@@ -184,45 +179,20 @@ class ResultDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetric(
-      ThemeData theme, String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.white38,
-          ),
-        ),
-      ],
-    );
-  }
+  // ── 카테고리 분포 ──────────────────────────────────────
+  Widget _buildCategoryDistribution() {
+    final supported = controller.supportedRanges;
+    if (supported.isEmpty) return const SizedBox.shrink();
 
-  Widget _buildCategoryDistribution(
-      ThemeData theme, List<FpsRangeInfo> supportedRanges) {
-    final categories = <String, int>{};
-    for (final range in supportedRanges) {
-      final cat = range.frameRateCategoryKo;
-      categories[cat] = (categories[cat] ?? 0) + 1;
-    }
-
-    if (categories.isEmpty) {
-      return const SizedBox.shrink();
+    final Map<String, int> cats = {};
+    for (final r in supported) {
+      cats[r.frameRateCategoryKo] = (cats[r.frameRateCategoryKo] ?? 0) + 1;
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: AppTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -231,52 +201,51 @@ class ResultDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.donut_large_rounded,
-                  color: Color(0xFF42A5F5), size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.donut_large_rounded,
+                  color: AppTheme.primaryLight, size: 4.5.w),
+              SizedBox(width: 2.w),
               Text(
                 'FPS 범주 분포',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ...categories.entries.map((e) {
+          SizedBox(height: 1.5.h),
+          ...cats.entries.map((e) {
             final color = _categoryColor(e.key);
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.only(bottom: 1.h),
               child: Row(
                 children: [
                   Container(
-                    width: 12,
-                    height: 12,
+                    width: 3.w,
+                    height: 3.w,
                     decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
+                        color: color, shape: BoxShape.circle),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 2.w),
                   Text(
                     e.key,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 10.sp),
                   ),
                   const Spacer(),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 2.5.w, vertical: 0.4.h),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '${e.value}개 프리셋',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
                         color: color,
+                        fontSize: 8.5.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -290,11 +259,21 @@ class ResultDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTechnicalInfo(ThemeData theme) {
+  // ── 기술 정보 ──────────────────────────────────────────
+  Widget _buildTechnicalInfo() {
+    final rows = [
+      ('패키지', 'camera ^0.12.0+1'),
+      ('상태관리', 'GetX ^4.7.3'),
+      ('반응형', 'flutter_sizer ^1.0.5'),
+      ('Android', 'CameraX (camera_android_camerax)'),
+      ('iOS', 'AVFoundation (camera_avfoundation)'),
+      ('FPS API', 'CameraValue.fps'),
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: AppTheme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -303,54 +282,46 @@ class ResultDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.code_rounded,
-                  color: Color(0xFF42A5F5), size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.code_rounded,
+                  color: AppTheme.primaryLight, size: 4.5.w),
+              SizedBox(width: 2.w),
               Text(
                 '기술 정보',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _buildTechItem(theme, '패키지', 'camera ^0.12.0+1'),
-          _buildTechItem(theme, 'Android', 'CameraX (camera_android_camerax)'),
-          _buildTechItem(theme, 'iOS', 'AVFoundation (camera_avfoundation)'),
-          _buildTechItem(theme, 'FPS API', 'CameraValue.fps'),
-          _buildTechItem(
-              theme, '측정 방식', '각 ResolutionPreset 초기화 후 fps 값 수집'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTechItem(ThemeData theme, String key, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              key,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white38,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
+          SizedBox(height: 1.5.h),
+          ...rows.map((r) => Padding(
+                padding: EdgeInsets.only(bottom: 1.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 20.w,
+                      child: Text(
+                        r.$1,
+                        style: TextStyle(
+                            color: AppTheme.textDisabled, fontSize: 8.5.sp),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        r.$2,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 8.5.sp,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
         ],
       ),
     );
@@ -359,45 +330,74 @@ class ResultDetailScreen extends StatelessWidget {
   Color _categoryColor(String category) {
     switch (category) {
       case '초고속 촬영':
-        return const Color(0xFFE91E63);
+        return AppTheme.fpsUltra;
       case '슬로우 모션':
-        return const Color(0xFFFF5722);
+        return AppTheme.fpsSlow;
       case '고프레임률':
-        return const Color(0xFF4CAF50);
+        return AppTheme.fpsHFR;
       case '표준':
-        return const Color(0xFF2196F3);
+        return AppTheme.fpsStandard;
       default:
-        return const Color(0xFF9E9E9E);
+        return AppTheme.fpsLow;
     }
   }
 
-  Future<void> _copyResults(BuildContext context) async {
-    final buffer = StringBuffer();
-    buffer.writeln('=== Camera FPS Inspector 결과 ===');
-    buffer.writeln(
-        '카메라: ${CameraFpsAnalyzer.lensDirectionToKorean(camera.lensDirection)}');
-    buffer.writeln('분석 시각: ${DateTime.now()}');
-    buffer.writeln();
-
-    for (final range in fpsRanges) {
-      if (range.isSupported) {
-        buffer.writeln(
-            '[${range.resolutionPreset.name}] ${range.label}: min=${range.minFps.toStringAsFixed(1)} / max=${range.maxFps.toStringAsFixed(1)} fps | ${range.frameRateCategoryKo}');
+  Future<void> _copyResults() async {
+    final buf = StringBuffer();
+    buf.writeln('=== Camera FPS Inspector 결과 ===');
+    buf.writeln('카메라: ${controller.directionLabel}');
+    buf.writeln('분석 시각: ${DateTime.now()}');
+    buf.writeln();
+    for (final r in controller.fpsRanges) {
+      if (r.isSupported) {
+        buf.writeln(
+            '[${r.resolutionPreset.name}] ${r.label}: '
+            'min=${r.minFps.toStringAsFixed(1)} / '
+            'max=${r.maxFps.toStringAsFixed(1)} fps | ${r.frameRateCategoryKo}');
       } else {
-        buffer.writeln(
-            '[${range.resolutionPreset.name}] 지원 안 됨: ${range.errorMessage}');
+        buf.writeln('[${r.resolutionPreset.name}] 지원 안 됨: ${r.errorMessage}');
       }
     }
+    await Clipboard.setData(ClipboardData(text: buf.toString()));
+    Get.snackbar(
+      '복사 완료',
+      '결과가 클립보드에 복사되었습니다',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppTheme.primary,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 2),
+    );
+  }
+}
 
-    await Clipboard.setData(ClipboardData(text: buffer.toString()));
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('결과가 클립보드에 복사되었습니다'),
-          backgroundColor: Color(0xFF1565C0),
-          duration: Duration(seconds: 2),
+// ── 메트릭 아이템 ─────────────────────────────────────────────
+class _MetricItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MetricItem(
+      {required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-      );
-    }
+        SizedBox(height: 0.5.h),
+        Text(
+          label,
+          style: TextStyle(
+              color: AppTheme.textDisabled, fontSize: 8.5.sp),
+        ),
+      ],
+    );
   }
 }

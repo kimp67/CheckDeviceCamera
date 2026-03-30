@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:get/get.dart';
+import 'bindings/app_bindings.dart';
+import 'routes/app_routes.dart';
 import 'screens/home_screen.dart';
-
-List<CameraDescription> cameras = [];
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    cameras = await availableCameras();
-  } on CameraException catch (e) {
-    debugPrint('Error initializing cameras: ${e.code} - ${e.description}');
-  }
   runApp(const CameraFpsInspectorApp());
 }
 
@@ -19,30 +16,27 @@ class CameraFpsInspectorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Camera FPS Inspector',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1),
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0A0A0F),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF1A1A2E),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0A0A0F),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
-      home: HomeScreen(cameras: cameras),
+    // flutter_sizer: Sizer 위젯으로 MaterialApp을 감싸야
+    //                .w / .h / .sp 반응형 단위가 동작합니다.
+    return Sizer(
+      builder: (context, orientation, screenType) {
+        return GetMaterialApp(
+          title: 'Camera FPS Inspector',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.dark,
+          initialRoute: AppRoutes.home,
+          initialBinding: HomeBinding(),
+          getPages: [
+            GetPage(
+              name: AppRoutes.home,
+              page: () => const HomeScreen(),
+              binding: HomeBinding(),
+            ),
+          ],
+          // 기본 전환 애니메이션
+          defaultTransition: Transition.fadeIn,
+        );
+      },
     );
   }
 }

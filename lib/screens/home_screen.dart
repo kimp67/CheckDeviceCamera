@@ -1,42 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:get/get.dart';
 import 'package:camera/camera.dart';
+import '../bindings/app_bindings.dart';
+import '../controllers/camera_controllers.dart';
+import '../theme/app_theme.dart';
 import 'camera_inspector_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  final List<CameraDescription> cameras;
-
-  const HomeScreen({super.key, required this.cameras});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
+/// 홈 화면 - GetView<CameraListController> 사용
+class HomeScreen extends GetView<CameraListController> {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -44,83 +20,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0A0A0F),
-              Color(0xFF0D1B3E),
-              Color(0xFF0A0A0F),
+              AppTheme.bgDark,
+              AppTheme.bgDeep,
+              AppTheme.bgDark,
             ],
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                _buildHeader(theme),
-                const SizedBox(height: 48),
-                _buildCameraList(theme),
-                const SizedBox(height: 32),
-                _buildInfoSection(theme),
-                const Spacer(),
-                _buildFooter(theme),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryLight),
+              );
+            }
+            return _buildContent(context);
+          }),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildContent(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 6.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 5.h),
+          _buildHeader(),
+          SizedBox(height: 4.h),
+          _buildCameraSection(),
+          SizedBox(height: 3.h),
+          _buildFpsCategoryGuide(),
+          SizedBox(height: 3.h),
+          _buildFooter(),
+          SizedBox(height: 3.h),
+        ],
+      ),
+    );
+  }
+
+  // ── 헤더 ───────────────────────────────────────────────
+  Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _pulseAnimation.value,
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0).withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF42A5F5).withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.camera_enhance_rounded,
-                      color: Color(0xFF42A5F5),
-                      size: 28,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 16),
+            _PulsingIcon(),
+            SizedBox(width: 4.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Camera FPS',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
                   ),
                   Text(
                     'Inspector',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: const Color(0xFF42A5F5),
+                    style: TextStyle(
+                      color: AppTheme.primaryLight,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -1,
                       height: 0.9,
@@ -129,13 +95,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
+            // 새로고침 버튼
+            IconButton(
+              onPressed: controller.refresh,
+              icon: Obx(() => AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: controller.isLoading.value
+                        ? SizedBox(
+                            key: const ValueKey('loading'),
+                            width: 5.w,
+                            height: 5.w,
+                            child: const CircularProgressIndicator(
+                              color: AppTheme.primaryLight,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Icon(
+                            key: const ValueKey('refresh'),
+                            Icons.refresh_rounded,
+                            color: AppTheme.textSecondary,
+                            size: 6.w,
+                          ),
+                  )),
+            ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 2.h),
+        // 설명 배지
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.8.h),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A237E).withValues(alpha: 0.4),
+            color: AppTheme.accent.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: const Color(0xFF3949AB).withValues(alpha: 0.5),
@@ -144,16 +134,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.speed_rounded,
-                color: Color(0xFF7986CB),
-                size: 14,
-              ),
-              const SizedBox(width: 6),
+              Icon(Icons.speed_rounded,
+                  color: const Color(0xFF7986CB), size: 3.5.w),
+              SizedBox(width: 1.5.w),
               Text(
                 '기기 카메라의 FPS 범위를 분석합니다',
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: TextStyle(
                   color: const Color(0xFF9FA8DA),
+                  fontSize: 9.sp,
                 ),
               ),
             ],
@@ -163,57 +151,189 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCameraList(ThemeData theme) {
-    if (widget.cameras.isEmpty) {
-      return _buildNoCameraCard(theme);
-    }
+  // ── 카메라 목록 섹션 ────────────────────────────────────
+  Widget _buildCameraSection() {
+    return Obx(() {
+      if (controller.errorMessage.value.isNotEmpty) {
+        return _buildErrorCard();
+      }
+      if (controller.cameras.isEmpty) {
+        return _buildNoCameraCard();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '감지된 카메라',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(width: 2.w),
+              Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${controller.cameras.length}개',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8.5.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          ...controller.cameras.asMap().entries.map((e) => Padding(
+                padding: EdgeInsets.only(bottom: 1.5.h),
+                child: _CameraCard(camera: e.value, index: e.key),
+              )),
+        ],
+      );
+    });
+  }
+
+  // ── FPS 범주 안내 ──────────────────────────────────────
+  Widget _buildFpsCategoryGuide() {
+    final items = [
+      ('≥240', '초고속', AppTheme.fpsUltra),
+      ('≥120', '슬로우모션', AppTheme.fpsSlow),
+      ('≥60', '고프레임률', AppTheme.fpsHFR),
+      ('≥30', '표준', AppTheme.fpsStandard),
+      ('<30', '저프레임률', AppTheme.fpsLow),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              '감지된 카메라',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1565C0),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '${widget.cameras.length}개',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          'FPS 범주 안내',
+          style: TextStyle(
+            color: AppTheme.textHint,
+            fontSize: 9.5.sp,
+            letterSpacing: 0.5,
+          ),
         ),
-        const SizedBox(height: 16),
-        ...widget.cameras.asMap().entries.map((entry) {
-          final index = entry.key;
-          final camera = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildCameraCard(theme, camera, index),
-          );
-        }),
+        SizedBox(height: 1.5.h),
+        Wrap(
+          spacing: 2.w,
+          runSpacing: 1.h,
+          children: items
+              .map((item) => _FpsChip(
+                    fps: item.$1,
+                    label: item.$2,
+                    color: item.$3,
+                  ))
+              .toList(),
+        ),
       ],
     );
   }
 
-  Widget _buildCameraCard(
-      ThemeData theme, CameraDescription camera, int index) {
+  Widget _buildFooter() {
+    return Center(
+      child: Text(
+        'camera ^0.12.0+1  ·  GetX ^4.7.3  ·  Sizer ^1.0.5',
+        style: TextStyle(color: AppTheme.textMuted, fontSize: 8.sp),
+      ),
+    );
+  }
+
+  Widget _buildNoCameraCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(8.w),
+      decoration: BoxDecoration(
+        color: AppTheme.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.no_photography_rounded,
+              color: Colors.red, size: 12.w),
+          SizedBox(height: 2.h),
+          Text(
+            '카메라를 찾을 수 없습니다',
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontSize: 11.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 1.h),
+          Text(
+            '기기에 카메라가 없거나 카메라 권한이 거부되었습니다.',
+            style:
+                TextStyle(color: AppTheme.textHint, fontSize: 9.sp),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(6.w),
+      decoration: BoxDecoration(
+        color: AppTheme.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              color: Colors.orangeAccent, size: 10.w),
+          SizedBox(height: 1.5.h),
+          Text(
+            '카메라 초기화 오류',
+            style: TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 11.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 0.8.h),
+          Text(
+            controller.errorMessage.value,
+            style: TextStyle(color: AppTheme.textHint, fontSize: 8.5.sp),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 2.h),
+          ElevatedButton.icon(
+            onPressed: controller.refresh,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('다시 시도'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 카메라 카드 ─────────────────────────────────────────────
+class _CameraCard extends StatelessWidget {
+  final CameraDescription camera;
+  final int index;
+
+  const _CameraCard({required this.camera, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
     final isBack = camera.lensDirection == CameraLensDirection.back;
     final isFront = camera.lensDirection == CameraLensDirection.front;
+
     final icon = isBack
         ? Icons.camera_rear_rounded
         : isFront
@@ -233,10 +353,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             : '외부 카메라';
 
     return InkWell(
-      onTap: () => _navigateToInspector(camera),
+      onTap: () {
+        // GetX: InspectorController를 동적으로 put하고 화면 이동
+        Get.put(
+          InspectorController(camera: camera),
+          tag: camera.name,
+          permanent: false,
+        );
+        Get.to(
+          () => CameraInspectorScreen(cameraTag: camera.name),
+          binding: InspectorBinding(camera: camera),
+          transition: Transition.rightToLeft,
+        );
+      },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(5.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -255,8 +387,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Row(
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 13.w,
+              height: 13.w,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: gradientColors,
@@ -272,25 +404,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 26),
+              child: Icon(icon, color: Colors.white, size: 6.w),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 4.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     directionLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 11.sp,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 0.5.h),
                   Text(
-                    'Camera ${index + 1}  •  ${camera.name}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white54,
+                    'Camera ${index + 1}  ·  ${camera.name}',
+                    style: TextStyle(
+                      color: AppTheme.textHint,
+                      fontSize: 8.5.sp,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -299,15 +433,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(2.w),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: Colors.white70,
-                size: 16,
+                color: AppTheme.textSecondary,
+                size: 4.w,
               ),
             ),
           ],
@@ -315,77 +449,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
+}
 
-  Widget _buildNoCameraCard(ThemeData theme) {
+// ── FPS 범주 칩 ──────────────────────────────────────────────
+class _FpsChip extends StatelessWidget {
+  final String fps;
+  final String label;
+  final Color color;
+
+  const _FpsChip(
+      {required this.fps, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.red.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.no_photography_rounded,
-              color: Colors.red, size: 48),
-          const SizedBox(height: 16),
-          Text(
-            '카메라를 찾을 수 없습니다',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.redAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '기기에 카메라가 없거나 카메라 권한이 거부되었습니다.',
-            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white54),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'FPS 범주 안내',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: Colors.white54,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            _buildFpsChip(theme, '≥240', '초고속', const Color(0xFFE91E63)),
-            const SizedBox(width: 8),
-            _buildFpsChip(theme, '≥120', '슬로우모션', const Color(0xFFFF5722)),
-            const SizedBox(width: 8),
-            _buildFpsChip(theme, '≥60', '고프레임률', const Color(0xFF4CAF50)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            _buildFpsChip(theme, '≥30', '표준', const Color(0xFF2196F3)),
-            const SizedBox(width: 8),
-            _buildFpsChip(theme, '<30', '저프레임률', const Color(0xFF9E9E9E)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFpsChip(
-      ThemeData theme, String fps, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.7.h),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
@@ -395,18 +473,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            width: 2.w,
+            height: 2.w,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 1.5.w),
           Text(
             '$fps fps  $label',
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: TextStyle(
               color: color,
+              fontSize: 9.sp,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -414,22 +490,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
+}
 
-  Widget _buildFooter(ThemeData theme) {
-    return Center(
-      child: Text(
-        'camera ^0.12.0+1 | Flutter',
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: Colors.white24,
-        ),
-      ),
+// ── 박동 아이콘 애니메이션 ──────────────────────────────────────
+class _PulsingIcon extends StatefulWidget {
+  @override
+  State<_PulsingIcon> createState() => _PulsingIconState();
+}
+
+class _PulsingIconState extends State<_PulsingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
   }
 
-  void _navigateToInspector(CameraDescription camera) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CameraInspectorScreen(camera: camera),
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Transform.scale(
+        scale: _anim.value,
+        child: Container(
+          width: 14.w,
+          height: 14.w,
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.primaryLight.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
+            Icons.camera_enhance_rounded,
+            color: AppTheme.primaryLight,
+            size: 7.w,
+          ),
+        ),
       ),
     );
   }
