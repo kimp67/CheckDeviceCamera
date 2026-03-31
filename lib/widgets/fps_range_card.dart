@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import '../models/fps_range_model.dart';
 import '../theme/app_theme.dart';
 
@@ -14,9 +14,8 @@ class FpsRangeCard extends StatelessWidget {
     this.showDetails = false,
   });
 
-  Color get _accentColor => fpsRange.isSupported
-      ? AppTheme.fpsColor(fpsRange.maxFps)
-      : Colors.grey;
+  Color get _accentColor =>
+      fpsRange.isSupported ? AppTheme.fpsColor(fpsRange.maxFps) : Colors.grey;
 
   Color get _bgColor => fpsRange.isSupported
       ? AppTheme.fpsBgColor(fpsRange.maxFps).withValues(alpha: 0.25)
@@ -31,7 +30,8 @@ class FpsRangeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _accentColor.withValues(
-              alpha: fpsRange.isSupported ? 0.4 : 0.2),
+            alpha: fpsRange.isSupported ? 0.4 : 0.2,
+          ),
           width: 1.5,
         ),
       ),
@@ -60,8 +60,7 @@ class FpsRangeCard extends StatelessWidget {
       children: [
         // 프리셋 배지
         Container(
-          padding:
-              EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.5.h),
+          padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.5.h),
           decoration: BoxDecoration(
             color: _accentColor.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
@@ -81,15 +80,13 @@ class FpsRangeCard extends StatelessWidget {
         Expanded(
           child: Text(
             fpsRange.resolutionPreset.typicalResolution,
-            style: TextStyle(
-                color: AppTheme.textHint, fontSize: 8.5.sp),
+            style: TextStyle(color: AppTheme.textHint, fontSize: 8.5.sp),
           ),
         ),
         // 카테고리 태그
         if (fpsRange.isSupported)
           Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: 2.w, vertical: 0.4.h),
+            padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.4.h),
             decoration: BoxDecoration(
               color: _accentColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
@@ -110,22 +107,39 @@ class FpsRangeCard extends StatelessWidget {
   Widget _buildFpsDisplay() {
     return Row(
       children: [
-        Expanded(child: _FpsValue(label: 'MIN', fps: fpsRange.minFps, color: Colors.white60)),
+        Expanded(
+          child: _FpsValue(
+            label: 'MIN',
+            fps: fpsRange.minFps,
+            color: Colors.white60,
+          ),
+        ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 3.w),
           child: Column(
             children: [
-              Icon(Icons.arrow_forward_rounded,
-                  color: _accentColor.withValues(alpha: 0.6), size: 4.5.w),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: _accentColor.withValues(alpha: 0.6),
+                size: 4.5.w,
+              ),
               Text(
                 'FPS',
                 style: TextStyle(
-                    color: AppTheme.textDisabled, fontSize: 7.5.sp),
+                  color: AppTheme.textDisabled,
+                  fontSize: 7.5.sp,
+                ),
               ),
             ],
           ),
         ),
-        Expanded(child: _FpsValue(label: 'MAX', fps: fpsRange.maxFps, color: _accentColor)),
+        Expanded(
+          child: _FpsValue(
+            label: 'MAX',
+            fps: fpsRange.maxFps,
+            color: _accentColor,
+          ),
+        ),
       ],
     );
   }
@@ -142,14 +156,14 @@ class FpsRangeCard extends StatelessWidget {
           children: [
             Text(
               'FPS 수준',
-              style: TextStyle(
-                  color: AppTheme.textDisabled, fontSize: 8.sp),
+              style: TextStyle(color: AppTheme.textDisabled, fontSize: 8.sp),
             ),
             Text(
               '${(progress * 100).toStringAsFixed(0)}% (최대 240 기준)',
               style: TextStyle(
-                  color: _accentColor.withValues(alpha: 0.7),
-                  fontSize: 8.sp),
+                color: _accentColor.withValues(alpha: 0.7),
+                fontSize: 8.sp,
+              ),
             ),
           ],
         ),
@@ -172,8 +186,7 @@ class FpsRangeCard extends StatelessWidget {
       children: [
         Text(
           '$label: ',
-          style: TextStyle(
-              color: AppTheme.textDisabled, fontSize: 8.sp),
+          style: TextStyle(color: AppTheme.textDisabled, fontSize: 8.sp),
         ),
         Expanded(
           child: Text(
@@ -197,8 +210,7 @@ class FpsRangeCard extends StatelessWidget {
         Expanded(
           child: Text(
             fpsRange.errorMessage ?? '이 기기에서 지원되지 않는 해상도',
-            style: TextStyle(
-                color: Colors.red.shade300, fontSize: 8.5.sp),
+            style: TextStyle(color: Colors.red.shade300, fontSize: 8.5.sp),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -214,8 +226,11 @@ class _FpsValue extends StatelessWidget {
   final double fps;
   final Color color;
 
-  const _FpsValue(
-      {required this.label, required this.fps, required this.color});
+  const _FpsValue({
+    required this.label,
+    required this.fps,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -234,8 +249,7 @@ class _FpsValue extends StatelessWidget {
           text: TextSpan(
             children: [
               TextSpan(
-                text: fps.toStringAsFixed(
-                    fps == fps.roundToDouble() ? 0 : 1),
+                text: fps.toStringAsFixed(fps == fps.roundToDouble() ? 0 : 1),
                 style: TextStyle(
                   color: color,
                   fontSize: 13.sp,

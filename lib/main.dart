@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:get/get.dart';
 import 'bindings/app_bindings.dart';
 import 'routes/app_routes.dart';

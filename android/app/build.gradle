@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.example.camera_fps_inspector"
         // camera_android_camerax requires minSdk >= 21
-        minSdk = 21
+        minSdkVersion = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

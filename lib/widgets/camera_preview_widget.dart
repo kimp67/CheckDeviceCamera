@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:camera/camera.dart';
 import '../theme/app_theme.dart';
 
@@ -30,7 +30,9 @@ class CameraPreviewWidget extends StatelessWidget {
 
           // 상단 그라디언트 오버레이
           Positioned(
-            top: 0, left: 0, right: 0,
+            top: 0,
+            left: 0,
+            right: 0,
             height: 8.h,
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -48,7 +50,9 @@ class CameraPreviewWidget extends StatelessWidget {
 
           // 하단 그라디언트 오버레이
           Positioned(
-            bottom: 0, left: 0, right: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
             height: 8.h,
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -66,34 +70,34 @@ class CameraPreviewWidget extends StatelessWidget {
 
           // FPS 오버레이 (좌측 상단)
           Positioned(
-            top: 1.5.h, left: 3.w,
+            top: 1.5.h,
+            left: 3.w,
             child: _FpsOverlay(fps: liveFps),
           ),
 
           // 해상도 정보 (좌측 하단)
           Positioned(
-            bottom: 1.5.h, left: 3.w,
-            child: _ResolutionOverlay(previewSize: controller.value.previewSize),
+            bottom: 1.5.h,
+            left: 3.w,
+            child: _ResolutionOverlay(
+              previewSize: controller.value.previewSize,
+            ),
           ),
 
           // 닫기 버튼 (우측 상단)
           Positioned(
-            top: 0.5.h, right: 1.w,
+            top: 0.5.h,
+            right: 1.w,
             child: IconButton(
               onPressed: onClose,
               icon: Icon(Icons.close_rounded, size: 5.5.w),
               color: Colors.white70,
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.black38,
-              ),
+              style: IconButton.styleFrom(backgroundColor: Colors.black38),
             ),
           ),
 
           // LIVE 배지 (우측 하단)
-          Positioned(
-            bottom: 1.5.h, right: 3.w,
-            child: _LiveBadge(),
-          ),
+          Positioned(bottom: 1.5.h, right: 3.w, child: _LiveBadge()),
         ],
       ),
     );
@@ -173,8 +177,7 @@ class _ResolutionOverlay extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.aspect_ratio_rounded,
-              color: Colors.white54, size: 3.w),
+          Icon(Icons.aspect_ratio_rounded, color: Colors.white54, size: 3.w),
           SizedBox(width: 1.w),
           Text(
             resStr,
@@ -203,8 +206,11 @@ class _LiveBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.fiber_manual_record_rounded,
-              color: Colors.white, size: 2.w),
+          Icon(
+            Icons.fiber_manual_record_rounded,
+            color: Colors.white,
+            size: 2.w,
+          ),
           SizedBox(width: 1.w),
           Text(
             'LIVE',

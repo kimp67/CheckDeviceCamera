@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import '../models/fps_range_model.dart';
 import '../theme/app_theme.dart';
 
@@ -19,8 +19,9 @@ class FpsBarChart extends StatelessWidget {
     final supported = fpsRanges.where((r) => r.isSupported).toList();
     if (supported.isEmpty) return const SizedBox.shrink();
 
-    final maxFps =
-        supported.map((r) => r.maxFps).reduce((a, b) => a > b ? a : b);
+    final maxFps = supported
+        .map((r) => r.maxFps)
+        .reduce((a, b) => a > b ? a : b);
 
     return Container(
       padding: EdgeInsets.all(4.w),
@@ -35,8 +36,11 @@ class FpsBarChart extends StatelessWidget {
           if (showTitle) ...[
             Row(
               children: [
-                Icon(Icons.bar_chart_rounded,
-                    color: AppTheme.primaryLight, size: 5.w),
+                Icon(
+                  Icons.bar_chart_rounded,
+                  color: AppTheme.primaryLight,
+                  size: 5.w,
+                ),
                 SizedBox(width: 2.w),
                 Text(
                   'FPS 비교 차트',
@@ -85,8 +89,7 @@ class FpsBarChart extends StatelessWidget {
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: Colors.white
-                                        .withValues(alpha: 0.05),
+                                    color: Colors.white.withValues(alpha: 0.05),
                                     width: 1,
                                   ),
                                 ),
@@ -99,10 +102,11 @@ class FpsBarChart extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: fpsRanges
-                            .map((r) => Expanded(
-                                  child: _Bar(
-                                      range: r, maxFps: maxFps),
-                                ))
+                            .map(
+                              (r) => Expanded(
+                                child: _Bar(range: r, maxFps: maxFps),
+                              ),
+                            )
                             .toList(),
                       ),
                     ],
@@ -121,7 +125,9 @@ class FpsBarChart extends StatelessWidget {
                   child: Text(
                     r.resolutionPreset.name,
                     style: TextStyle(
-                        color: AppTheme.textDisabled, fontSize: 7.sp),
+                      color: AppTheme.textDisabled,
+                      fontSize: 7.sp,
+                    ),
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -137,10 +143,10 @@ class FpsBarChart extends StatelessWidget {
   }
 
   Widget _yLabel(String text) => Text(
-        text,
-        style: TextStyle(color: AppTheme.textDisabled, fontSize: 7.sp),
-        textAlign: TextAlign.right,
-      );
+    text,
+    style: TextStyle(color: AppTheme.textDisabled, fontSize: 7.sp),
+    textAlign: TextAlign.right,
+  );
 
   Widget _buildLegend() {
     final items = [
@@ -159,14 +165,12 @@ class FpsBarChart extends StatelessWidget {
             Container(
               width: 2.w,
               height: 2.w,
-              decoration:
-                  BoxDecoration(color: l.$2, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: l.$2, shape: BoxShape.circle),
             ),
             SizedBox(width: 1.w),
             Text(
               l.$1,
-              style: TextStyle(
-                  color: AppTheme.textDisabled, fontSize: 7.5.sp),
+              style: TextStyle(color: AppTheme.textDisabled, fontSize: 7.5.sp),
             ),
           ],
         );
@@ -196,8 +200,9 @@ class _Bar extends StatelessWidget {
               height: 2.h,
               decoration: BoxDecoration(
                 color: Colors.white10,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
               ),
             ),
           ],
@@ -236,8 +241,9 @@ class _Bar extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [color, color.withValues(alpha: 0.5)],
               ),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(4),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: color.withValues(alpha: 0.4),

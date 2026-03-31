@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:get/get.dart';
 import '../controllers/camera_controllers.dart';
 import '../theme/app_theme.dart';
@@ -33,64 +33,68 @@ class ResultDetailScreen extends GetView<InspectorController> {
           ),
         ],
       ),
-      body: Obx(() => CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(4.w),
-                  child: _buildHeaderCard(),
+      body: Obx(
+        () => CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(4.w),
+                child: _buildHeaderCard(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: FpsBarChart(
+                  fpsRanges: controller.fpsRanges,
+                  showTitle: true,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  child: FpsBarChart(
-                    fpsRanges: controller.fpsRanges,
-                    showTitle: true,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(4.w),
+                child: _buildCategoryDistribution(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(4.w, 1.h, 4.w, 1.h),
+                child: Text(
+                  '해상도 프리셋별 상세 정보',
+                  style: TextStyle(
+                    color: AppTheme.textHint,
+                    fontSize: 9.5.sp,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(4.w),
-                  child: _buildCategoryDistribution(),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(4.w, 1.h, 4.w, 1.h),
-                  child: Text(
-                    '해상도 프리셋별 상세 정보',
-                    style: TextStyle(
-                      color: AppTheme.textHint,
-                      fontSize: 9.5.sp,
-                      letterSpacing: 0.5,
-                    ),
+            ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 4.w,
+                    vertical: 0.6.h,
+                  ),
+                  child: FpsRangeCard(
+                    fpsRange: controller.fpsRanges[i],
+                    showDetails: true,
                   ),
                 ),
+                childCount: controller.fpsRanges.length,
               ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (_, i) => Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 4.w, vertical: 0.6.h),
-                    child: FpsRangeCard(
-                      fpsRange: controller.fpsRanges[i],
-                      showDetails: true,
-                    ),
-                  ),
-                  childCount: controller.fpsRanges.length,
-                ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(4.w),
+                child: _buildTechnicalInfo(),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(4.w),
-                  child: _buildTechnicalInfo(),
-                ),
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: 5.h)),
-            ],
-          )),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 5.h)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -111,8 +115,7 @@ class ResultDetailScreen extends GetView<InspectorController> {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: AppTheme.primaryLight.withValues(alpha: 0.4)),
+        border: Border.all(color: AppTheme.primaryLight.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,8 +126,8 @@ class ResultDetailScreen extends GetView<InspectorController> {
                 camera.lensDirection.name == 'back'
                     ? Icons.camera_rear_rounded
                     : camera.lensDirection.name == 'front'
-                        ? Icons.camera_front_rounded
-                        : Icons.usb_rounded,
+                    ? Icons.camera_front_rounded
+                    : Icons.usb_rounded,
                 color: AppTheme.primaryLight,
                 size: 7.w,
               ),
@@ -144,7 +147,9 @@ class ResultDetailScreen extends GetView<InspectorController> {
                     Text(
                       camera.name,
                       style: TextStyle(
-                          color: AppTheme.textDisabled, fontSize: 8.5.sp),
+                        color: AppTheme.textDisabled,
+                        fontSize: 8.5.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -201,8 +206,11 @@ class ResultDetailScreen extends GetView<InspectorController> {
         children: [
           Row(
             children: [
-              Icon(Icons.donut_large_rounded,
-                  color: AppTheme.primaryLight, size: 4.5.w),
+              Icon(
+                Icons.donut_large_rounded,
+                color: AppTheme.primaryLight,
+                size: 4.5.w,
+              ),
               SizedBox(width: 2.w),
               Text(
                 'FPS 범주 분포',
@@ -225,18 +233,24 @@ class ResultDetailScreen extends GetView<InspectorController> {
                     width: 3.w,
                     height: 3.w,
                     decoration: BoxDecoration(
-                        color: color, shape: BoxShape.circle),
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   SizedBox(width: 2.w),
                   Text(
                     e.key,
                     style: TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 10.sp),
+                      color: AppTheme.textSecondary,
+                      fontSize: 10.sp,
+                    ),
                   ),
                   const Spacer(),
                   Container(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 2.5.w, vertical: 0.4.h),
+                      horizontal: 2.5.w,
+                      vertical: 0.4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
@@ -282,8 +296,11 @@ class ResultDetailScreen extends GetView<InspectorController> {
         children: [
           Row(
             children: [
-              Icon(Icons.code_rounded,
-                  color: AppTheme.primaryLight, size: 4.5.w),
+              Icon(
+                Icons.code_rounded,
+                color: AppTheme.primaryLight,
+                size: 4.5.w,
+              ),
               SizedBox(width: 2.w),
               Text(
                 '기술 정보',
@@ -296,32 +313,36 @@ class ResultDetailScreen extends GetView<InspectorController> {
             ],
           ),
           SizedBox(height: 1.5.h),
-          ...rows.map((r) => Padding(
-                padding: EdgeInsets.only(bottom: 1.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 20.w,
-                      child: Text(
-                        r.$1,
-                        style: TextStyle(
-                            color: AppTheme.textDisabled, fontSize: 8.5.sp),
+          ...rows.map(
+            (r) => Padding(
+              padding: EdgeInsets.only(bottom: 1.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 20.w,
+                    child: Text(
+                      r.$1,
+                      style: TextStyle(
+                        color: AppTheme.textDisabled,
+                        fontSize: 8.5.sp,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        r.$2,
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 8.5.sp,
-                          fontFamily: 'monospace',
-                        ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      r.$2,
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 8.5.sp,
+                        fontFamily: 'monospace',
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -351,9 +372,10 @@ class ResultDetailScreen extends GetView<InspectorController> {
     for (final r in controller.fpsRanges) {
       if (r.isSupported) {
         buf.writeln(
-            '[${r.resolutionPreset.name}] ${r.label}: '
-            'min=${r.minFps.toStringAsFixed(1)} / '
-            'max=${r.maxFps.toStringAsFixed(1)} fps | ${r.frameRateCategoryKo}');
+          '[${r.resolutionPreset.name}] ${r.label}: '
+          'min=${r.minFps.toStringAsFixed(1)} / '
+          'max=${r.maxFps.toStringAsFixed(1)} fps | ${r.frameRateCategoryKo}',
+        );
       } else {
         buf.writeln('[${r.resolutionPreset.name}] 지원 안 됨: ${r.errorMessage}');
       }
@@ -376,8 +398,11 @@ class _MetricItem extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _MetricItem(
-      {required this.label, required this.value, required this.color});
+  const _MetricItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -394,8 +419,7 @@ class _MetricItem extends StatelessWidget {
         SizedBox(height: 0.5.h),
         Text(
           label,
-          style: TextStyle(
-              color: AppTheme.textDisabled, fontSize: 8.5.sp),
+          style: TextStyle(color: AppTheme.textDisabled, fontSize: 8.5.sp),
         ),
       ],
     );

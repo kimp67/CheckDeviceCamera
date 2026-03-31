@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:get/get.dart';
 import '../controllers/camera_controllers.dart';
 import '../theme/app_theme.dart';
@@ -38,9 +38,7 @@ class CameraInspectorScreen extends GetView<InspectorController> {
               onClose: controller.toggleLivePreview,
             );
           }),
-          Expanded(
-            child: Obx(() => _buildBody()),
-          ),
+          Expanded(child: Obx(() => _buildBody())),
         ],
       ),
       floatingActionButton: _buildFabs(),
@@ -54,16 +52,18 @@ class CameraInspectorScreen extends GetView<InspectorController> {
         style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
       ),
       actions: [
-        Obx(() => controller.hasResult
-            ? IconButton(
-                icon: Icon(Icons.info_outline_rounded, size: 6.w),
-                tooltip: '상세 보기',
-                onPressed: () => Get.to(
-                  () => ResultDetailScreen(cameraTag: cameraTag),
-                  transition: Transition.downToUp,
-                ),
-              )
-            : const SizedBox.shrink()),
+        Obx(
+          () => controller.hasResult
+              ? IconButton(
+                  icon: Icon(Icons.info_outline_rounded, size: 6.w),
+                  tooltip: '상세 보기',
+                  onPressed: () => Get.to(
+                    () => ResultDetailScreen(cameraTag: cameraTag),
+                    transition: Transition.downToUp,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }
@@ -139,7 +139,9 @@ class CameraInspectorScreen extends GetView<InspectorController> {
                     Text(
                       f.$2,
                       style: TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 10.sp),
+                        color: AppTheme.textSecondary,
+                        fontSize: 10.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -156,59 +158,64 @@ class CameraInspectorScreen extends GetView<InspectorController> {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(8.w),
-        child: Obx(() => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 20.w,
-                  height: 20.w,
-                  child: CircularProgressIndicator(
-                    value: controller.analyzeProgress,
-                    strokeWidth: 6,
-                    backgroundColor: Colors.white10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppTheme.primaryLight),
+        child: Obx(
+          () => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: CircularProgressIndicator(
+                  value: controller.analyzeProgress,
+                  strokeWidth: 6,
+                  backgroundColor: Colors.white10,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryLight,
                   ),
                 ),
-                SizedBox(height: 3.h),
-                Text(
-                  '카메라 분석 중',
+              ),
+              SizedBox(height: 3.h),
+              Text(
+                '카메라 분석 중',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 1.5.h),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  controller.progressMessage.value,
+                  key: ValueKey(controller.progressMessage.value),
                   style: TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryLight,
+                    fontSize: 10.sp,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: 3.h),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: controller.analyzeProgress,
+                  minHeight: 1.h,
+                  backgroundColor: Colors.white10,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryLight,
                   ),
                 ),
-                SizedBox(height: 1.5.h),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    controller.progressMessage.value,
-                    key: ValueKey(controller.progressMessage.value),
-                    style: TextStyle(
-                        color: AppTheme.primaryLight, fontSize: 10.sp),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 3.h),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: controller.analyzeProgress,
-                    minHeight: 1.h,
-                    backgroundColor: Colors.white10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppTheme.primaryLight),
-                  ),
-                ),
-                SizedBox(height: 1.h),
-                Text(
-                  '${controller.progressStep.value} / ${controller.totalSteps}',
-                  style: TextStyle(
-                      color: AppTheme.textDisabled, fontSize: 9.sp),
-                ),
-              ],
-            )),
+              ),
+              SizedBox(height: 1.h),
+              Text(
+                '${controller.progressStep.value} / ${controller.totalSteps}',
+                style: TextStyle(color: AppTheme.textDisabled, fontSize: 9.sp),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -247,8 +254,7 @@ class CameraInspectorScreen extends GetView<InspectorController> {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (_, i) => Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.6.h),
                 child: FpsRangeCard(fpsRange: ranges[i]),
               ),
               childCount: ranges.length,
@@ -278,16 +284,18 @@ class CameraInspectorScreen extends GetView<InspectorController> {
             ],
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: AppTheme.primary.withValues(alpha: 0.5)),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.summarize_rounded,
-                    color: AppTheme.primaryLight, size: 5.w),
+                Icon(
+                  Icons.summarize_rounded,
+                  color: AppTheme.primaryLight,
+                  size: 5.w,
+                ),
                 SizedBox(width: 2.w),
                 Text(
                   '분석 요약',
@@ -333,90 +341,96 @@ class CameraInspectorScreen extends GetView<InspectorController> {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(8.w),
-        child: Obx(() => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline_rounded,
-                    color: Colors.redAccent, size: 16.w),
-                SizedBox(height: 2.h),
-                Text(
-                  '오류 발생',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
+        child: Obx(
+          () => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.redAccent,
+                size: 16.w,
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                '오류 발생',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(height: 1.5.h),
-                Text(
-                  controller.errorMessage.value,
-                  style: TextStyle(
-                      color: AppTheme.textHint, fontSize: 9.sp),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 3.h),
-                ElevatedButton.icon(
-                  onPressed: controller.startAnalysis,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('다시 시도'),
-                ),
-              ],
-            )),
+              ),
+              SizedBox(height: 1.5.h),
+              Text(
+                controller.errorMessage.value,
+                style: TextStyle(color: AppTheme.textHint, fontSize: 9.sp),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 3.h),
+              ElevatedButton.icon(
+                onPressed: controller.startAnalysis,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   // ── FAB 버튼 그룹 ──────────────────────────────────────
   Widget _buildFabs() {
-    return Obx(() => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 라이브 프리뷰 FAB
-            FloatingActionButton.small(
-              heroTag: 'preview_fab_$cameraTag',
-              onPressed: controller.toggleLivePreview,
-              tooltip: controller.showPreview.value ? '프리뷰 닫기' : '라이브 프리뷰',
-              backgroundColor: controller.showPreview.value
-                  ? Colors.red.withValues(alpha: 0.8)
-                  : AppTheme.primary,
-              child: Icon(
-                controller.showPreview.value
-                    ? Icons.videocam_off_rounded
-                    : Icons.videocam_rounded,
+    return Obx(
+      () => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 라이브 프리뷰 FAB
+          FloatingActionButton.small(
+            heroTag: 'preview_fab_$cameraTag',
+            onPressed: controller.toggleLivePreview,
+            tooltip: controller.showPreview.value ? '프리뷰 닫기' : '라이브 프리뷰',
+            backgroundColor: controller.showPreview.value
+                ? Colors.red.withValues(alpha: 0.8)
+                : AppTheme.primary,
+            child: Icon(
+              controller.showPreview.value
+                  ? Icons.videocam_off_rounded
+                  : Icons.videocam_rounded,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 1.5.h),
+          // 분석 FAB
+          FloatingActionButton.extended(
+            heroTag: 'analyze_fab_$cameraTag',
+            onPressed: controller.isAnalyzing.value
+                ? null
+                : controller.startAnalysis,
+            backgroundColor: controller.isAnalyzing.value
+                ? Colors.grey.shade800
+                : AppTheme.primary,
+            icon: controller.isAnalyzing.value
+                ? SizedBox(
+                    width: 5.w,
+                    height: 5.w,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.analytics_rounded, color: Colors.white),
+            label: Text(
+              controller.isAnalyzing.value ? '분석 중...' : 'FPS 분석 시작',
+              style: TextStyle(
                 color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 10.sp,
               ),
             ),
-            SizedBox(height: 1.5.h),
-            // 분석 FAB
-            FloatingActionButton.extended(
-              heroTag: 'analyze_fab_$cameraTag',
-              onPressed: controller.isAnalyzing.value
-                  ? null
-                  : controller.startAnalysis,
-              backgroundColor: controller.isAnalyzing.value
-                  ? Colors.grey.shade800
-                  : AppTheme.primary,
-              icon: controller.isAnalyzing.value
-                  ? SizedBox(
-                      width: 5.w,
-                      height: 5.w,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.analytics_rounded, color: Colors.white),
-              label: Text(
-                controller.isAnalyzing.value ? '분석 중...' : 'FPS 분석 시작',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10.sp,
-                ),
-              ),
-            ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -426,8 +440,11 @@ class _StatItem extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatItem(
-      {required this.label, required this.value, required this.color});
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -444,8 +461,7 @@ class _StatItem extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
-                  color: AppTheme.textHint, fontSize: 8.sp),
+              style: TextStyle(color: AppTheme.textHint, fontSize: 8.sp),
             ),
             SizedBox(height: 0.4.h),
             Text(

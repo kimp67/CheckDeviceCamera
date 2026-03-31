@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sizer/flutter_sizer.dart';
+import 'package:sizer/sizer.dart';
 import 'package:get/get.dart';
 import 'package:camera/camera.dart';
 import '../bindings/app_bindings.dart';
@@ -19,11 +19,7 @@ class HomeScreen extends GetView<CameraListController> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppTheme.bgDark,
-              AppTheme.bgDeep,
-              AppTheme.bgDark,
-            ],
+            colors: [AppTheme.bgDark, AppTheme.bgDeep, AppTheme.bgDark],
           ),
         ),
         child: SafeArea(
@@ -98,25 +94,27 @@ class HomeScreen extends GetView<CameraListController> {
             // 새로고침 버튼
             IconButton(
               onPressed: controller.refresh,
-              icon: Obx(() => AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: controller.isLoading.value
-                        ? SizedBox(
-                            key: const ValueKey('loading'),
-                            width: 5.w,
-                            height: 5.w,
-                            child: const CircularProgressIndicator(
-                              color: AppTheme.primaryLight,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Icon(
-                            key: const ValueKey('refresh'),
-                            Icons.refresh_rounded,
-                            color: AppTheme.textSecondary,
-                            size: 6.w,
+              icon: Obx(
+                () => AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: controller.isLoading.value
+                      ? SizedBox(
+                          key: const ValueKey('loading'),
+                          width: 5.w,
+                          height: 5.w,
+                          child: const CircularProgressIndicator(
+                            color: AppTheme.primaryLight,
+                            strokeWidth: 2,
                           ),
-                  )),
+                        )
+                      : Icon(
+                          key: const ValueKey('refresh'),
+                          Icons.refresh_rounded,
+                          color: AppTheme.textSecondary,
+                          size: 6.w,
+                        ),
+                ),
+              ),
             ),
           ],
         ),
@@ -134,8 +132,11 @@ class HomeScreen extends GetView<CameraListController> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.speed_rounded,
-                  color: const Color(0xFF7986CB), size: 3.5.w),
+              Icon(
+                Icons.speed_rounded,
+                color: const Color(0xFF7986CB),
+                size: 3.5.w,
+              ),
               SizedBox(width: 1.5.w),
               Text(
                 '기기 카메라의 FPS 범위를 분석합니다',
@@ -175,8 +176,7 @@ class HomeScreen extends GetView<CameraListController> {
               ),
               SizedBox(width: 2.w),
               Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+                padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
                 decoration: BoxDecoration(
                   color: AppTheme.primary,
                   borderRadius: BorderRadius.circular(10),
@@ -193,10 +193,12 @@ class HomeScreen extends GetView<CameraListController> {
             ],
           ),
           SizedBox(height: 2.h),
-          ...controller.cameras.asMap().entries.map((e) => Padding(
-                padding: EdgeInsets.only(bottom: 1.5.h),
-                child: _CameraCard(camera: e.value, index: e.key),
-              )),
+          ...controller.cameras.asMap().entries.map(
+            (e) => Padding(
+              padding: EdgeInsets.only(bottom: 1.5.h),
+              child: _CameraCard(camera: e.value, index: e.key),
+            ),
+          ),
         ],
       );
     });
@@ -228,11 +230,10 @@ class HomeScreen extends GetView<CameraListController> {
           spacing: 2.w,
           runSpacing: 1.h,
           children: items
-              .map((item) => _FpsChip(
-                    fps: item.$1,
-                    label: item.$2,
-                    color: item.$3,
-                  ))
+              .map(
+                (item) =>
+                    _FpsChip(fps: item.$1, label: item.$2, color: item.$3),
+              )
               .toList(),
         ),
       ],
@@ -259,8 +260,7 @@ class HomeScreen extends GetView<CameraListController> {
       ),
       child: Column(
         children: [
-          Icon(Icons.no_photography_rounded,
-              color: Colors.red, size: 12.w),
+          Icon(Icons.no_photography_rounded, color: Colors.red, size: 12.w),
           SizedBox(height: 2.h),
           Text(
             '카메라를 찾을 수 없습니다',
@@ -273,8 +273,7 @@ class HomeScreen extends GetView<CameraListController> {
           SizedBox(height: 1.h),
           Text(
             '기기에 카메라가 없거나 카메라 권한이 거부되었습니다.',
-            style:
-                TextStyle(color: AppTheme.textHint, fontSize: 9.sp),
+            style: TextStyle(color: AppTheme.textHint, fontSize: 9.sp),
             textAlign: TextAlign.center,
           ),
         ],
@@ -293,8 +292,11 @@ class HomeScreen extends GetView<CameraListController> {
       ),
       child: Column(
         children: [
-          Icon(Icons.warning_amber_rounded,
-              color: Colors.orangeAccent, size: 10.w),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orangeAccent,
+            size: 10.w,
+          ),
           SizedBox(height: 1.5.h),
           Text(
             '카메라 초기화 오류',
@@ -337,20 +339,20 @@ class _CameraCard extends StatelessWidget {
     final icon = isBack
         ? Icons.camera_rear_rounded
         : isFront
-            ? Icons.camera_front_rounded
-            : Icons.usb_rounded;
+        ? Icons.camera_front_rounded
+        : Icons.usb_rounded;
 
     final gradientColors = isBack
         ? [const Color(0xFF1565C0), const Color(0xFF0D47A1)]
         : isFront
-            ? [const Color(0xFF6A1B9A), const Color(0xFF4A148C)]
-            : [const Color(0xFF2E7D32), const Color(0xFF1B5E20)];
+        ? [const Color(0xFF6A1B9A), const Color(0xFF4A148C)]
+        : [const Color(0xFF2E7D32), const Color(0xFF1B5E20)];
 
     final directionLabel = isBack
         ? '후면 카메라'
         : isFront
-            ? '전면 카메라'
-            : '외부 카메라';
+        ? '전면 카메라'
+        : '외부 카메라';
 
     return InkWell(
       onTap: () {
@@ -457,8 +459,7 @@ class _FpsChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _FpsChip(
-      {required this.fps, required this.label, required this.color});
+  const _FpsChip({required this.fps, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -510,9 +511,10 @@ class _PulsingIconState extends State<_PulsingIcon>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
