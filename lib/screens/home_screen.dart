@@ -142,7 +142,7 @@ class HomeScreen extends GetView<CameraListController> {
                 '기기 카메라의 FPS 범위를 분석합니다',
                 style: TextStyle(
                   color: const Color(0xFF9FA8DA),
-                  fontSize: 9.sp,
+                  fontSize: 13.sp,
                 ),
               ),
             ],
@@ -170,7 +170,7 @@ class HomeScreen extends GetView<CameraListController> {
                 '감지된 카메라',
                 style: TextStyle(
                   color: AppTheme.textSecondary,
-                  fontSize: 11.sp,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -185,7 +185,7 @@ class HomeScreen extends GetView<CameraListController> {
                   '${controller.cameras.length}개',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 8.5.sp,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -221,7 +221,7 @@ class HomeScreen extends GetView<CameraListController> {
           'FPS 범주 안내',
           style: TextStyle(
             color: AppTheme.textHint,
-            fontSize: 9.5.sp,
+            fontSize: 13.sp,
             letterSpacing: 0.5,
           ),
         ),
@@ -244,7 +244,7 @@ class HomeScreen extends GetView<CameraListController> {
     return Center(
       child: Text(
         'camera ^0.12.0+1  ·  GetX ^4.7.3  ·  Sizer ^1.0.5',
-        style: TextStyle(color: AppTheme.textMuted, fontSize: 8.sp),
+        style: TextStyle(color: AppTheme.textMuted, fontSize: 10.sp),
       ),
     );
   }
@@ -266,14 +266,14 @@ class HomeScreen extends GetView<CameraListController> {
             '카메라를 찾을 수 없습니다',
             style: TextStyle(
               color: Colors.redAccent,
-              fontSize: 11.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 1.h),
           Text(
             '기기에 카메라가 없거나 카메라 권한이 거부되었습니다.',
-            style: TextStyle(color: AppTheme.textHint, fontSize: 9.sp),
+            style: TextStyle(color: AppTheme.textHint, fontSize: 10.sp),
             textAlign: TextAlign.center,
           ),
         ],
@@ -302,14 +302,14 @@ class HomeScreen extends GetView<CameraListController> {
             '카메라 초기화 오류',
             style: TextStyle(
               color: Colors.orangeAccent,
-              fontSize: 11.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 0.8.h),
           Text(
             controller.errorMessage.value,
-            style: TextStyle(color: AppTheme.textHint, fontSize: 8.5.sp),
+            style: TextStyle(color: AppTheme.textHint, fontSize: 11.sp),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 2.h),
@@ -417,17 +417,14 @@ class _CameraCard extends StatelessWidget {
                     directionLabel,
                     style: TextStyle(
                       color: AppTheme.textPrimary,
-                      fontSize: 11.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   SizedBox(height: 0.5.h),
                   Text(
                     'Camera ${index + 1}  ·  ${camera.name}',
-                    style: TextStyle(
-                      color: AppTheme.textHint,
-                      fontSize: 8.5.sp,
-                    ),
+                    style: TextStyle(color: AppTheme.textHint, fontSize: 13.sp),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -464,7 +461,7 @@ class _FpsChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 0.7.h),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.7.h),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
@@ -483,7 +480,7 @@ class _FpsChip extends StatelessWidget {
             '$fps fps  $label',
             style: TextStyle(
               color: color,
-              fontSize: 9.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.w600,
             ),
           ),
