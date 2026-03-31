@@ -58,6 +58,10 @@ class InspectorController extends GetxController {
   final RxBool showPreview = false.obs;
   final RxDouble liveFps = 0.0.obs;
 
+  // ── 실시간 FPS 측정용 내부 변수 ─────────────────────────
+  int _frameCount = 0;
+  DateTime? _fpsWindowStart;
+
   // ── 계산된 값 (Getter) ───────────────────────────────
   List<FpsRangeInfo> get supportedRanges =>
       fpsRanges.where((r) => r.isSupported).toList();
@@ -137,7 +141,7 @@ class InspectorController extends GetxController {
       await ctrl.initialize();
       previewController.value = ctrl;
       showPreview.value = true;
-      _pollLiveFps(ctrl);
+      _startLiveFpsMeasure(ctrl);
     } catch (e) {
       await ctrl.dispose();
       Get.snackbar(
@@ -153,19 +157,39 @@ class InspectorController extends GetxController {
   Future<void> _stopPreview() async {
     showPreview.value = false;
     liveFps.value = 0;
+    _frameCount = 0;
+    _fpsWindowStart = null;
     final ctrl = previewController.value;
     previewController.value = null;
+    // 이미지 스트림이 실행 중인 경우 명시적으로 정지
+    if (ctrl != null && ctrl.value.isStreamingImages) {
+      await ctrl.stopImageStream();
+    }
     await ctrl?.dispose();
   }
 
-  void _pollLiveFps(CameraController ctrl) {
-    Future.doWhile(() async {
-      if (!showPreview.value || previewController.value == null) return false;
-      if (ctrl.value.isInitialized) {
-        liveFps.value = ctrl.value.fps;
+  /// startImageStream()으로 실제 프레임을 카운트하여 실시간 FPS를 계산합니다.
+  ///
+  /// 1초(1000ms) 단위 슬라이딩 윈도우로 FPS를 갱신하므로
+  /// [CameraValue.fps] 필드 없이도 정확한 실시간 FPS를 얻을 수 있습니다.
+  void _startLiveFpsMeasure(CameraController ctrl) {
+    _frameCount = 0;
+    _fpsWindowStart = DateTime.now();
+
+    ctrl.startImageStream((CameraImage image) {
+      // 프리뷰가 중단된 경우 더 이상 카운트하지 않음
+      if (!showPreview.value) return;
+
+      _frameCount++;
+      final now = DateTime.now();
+      final elapsed = now.difference(_fpsWindowStart!).inMilliseconds;
+
+      // 1초(1000ms)마다 FPS 값 갱신 후 윈도우 리셋
+      if (elapsed >= 1000) {
+        liveFps.value = (_frameCount * 1000) / elapsed;
+        _frameCount = 0;
+        _fpsWindowStart = now;
       }
-      await Future.delayed(const Duration(milliseconds: 500));
-      return showPreview.value;
     });
   }
 }
