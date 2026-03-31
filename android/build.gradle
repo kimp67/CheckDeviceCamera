@@ -1,6 +1,5 @@
-plugins {
-    id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
-}
+// dev.flutter.flutter-gradle-plugin 은 settings.gradle의
+// includeBuild() 로 이미 classpath에 등록되므로 여기서 선언 불필요
 
 allprojects {
     repositories {
